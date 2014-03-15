@@ -1,0 +1,105 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title> Number of bugs modified each year</title>
+
+<link href="examples.css" rel="stylesheet" type="text/css">
+
+<!--[if lte IE 8]><script language="javascript" type="text/javascript" src="flot/excanvas.min.js"></script><![endif]-->
+<script language="javascript" type="text/javascript" src="flot/jquery.js"></script>
+<script language="javascript" type="text/javascript" src="flot/jquery.flot.js"></script>
+<script language="javascript" type="text/javascript" src="flot/jquery.flot.categories.js"></script>
+
+<script type="text/javascript">
+
+$(function() {
+
+	var options = {	series: {
+			bars: {
+				show: true,
+				barWidth: 0.6,
+				align: "center"}
+		}, xaxis: {
+				mode: "categories",
+				tickLength: 0
+			}
+		};
+
+		var data = [];
+
+		$.plot("#placeholder", data, options );
+
+		$("button.fetchSeries").click(function () {
+
+			var button = $(this);
+
+			// Find the URL in the link, then fetch the data
+
+			var dataurl = button.siblings("a").attr("href");
+			function makeTwoDim(lines)
+			{
+			 
+			 var data = new Array((lines.length+1)/2); 
+			 var count = 0;
+			 for(var i =0; i<lines.length/2;i++)
+			{
+			  temp = new Array(2);
+			  temp[0] = lines[count];
+			  temp[1] = lines[count+1];
+			  count += 2;
+			  data[i] = temp;
+			}
+			 return data;
+			}
+
+			function onDataReceived(series) {
+
+			var allTextLines = series.split(/\r\n|\n/);
+			var headers = allTextLines[0].split(',');
+			var lines = [];
+
+    			for (var i=0; i<allTextLines.length; i++) {
+        				var line = allTextLines[i].split(',');
+        				if (line.length == headers.length) {
+
+				            var tarr = [];
+				            for (var j=0; j<headers.length; j++) {
+				                tarr.push(line[j]);
+            					}
+			            lines.push(tarr);
+        			}
+
+    		}
+				data = makeTwoDim(lines);
+				$.plot("#placeholder", data, options);
+			}
+
+			$.ajax({
+				url: dataurl,
+				type: "GET",
+				dataType: "text",
+				success: onDataReceived
+			});
+		});
+
+});	
+</script>
+</head>
+
+<body>
+
+
+<div class="demo-container">
+<div id="placeholder" class="demo-placeholder"></div>
+</div>
+
+<p>
+<button class="fetchSeries">Read data from data.csv</button>[ <a href="data_csv.csv">see data</a> ]
+<span></span>
+</p>
+
+</body>
+</html>
